@@ -1,0 +1,20 @@
+# Usar una imagen base de Node.js
+FROM node:18-alpine
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar los archivos necesarios
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar el resto de la aplicación
+COPY . .
+
+# Exponer el puerto estándar de Vite
+EXPOSE 5173
+
+# Comando para ejecutar Vite
+CMD ["npm", "run", "dev", "--", "--host"]

@@ -1,0 +1,33 @@
+# Usar una imagen base de Node.js
+FROM node:18
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar los archivos necesarios
+COPY package*.json tsconfig.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Instalar Puppeteer y dependencias necesarias
+RUN apt-get update && apt-get install -y \
+    chromium \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copiar el resto del código
+COPY . .
+
+# Compilar TypeScript
+RUN npm run build
+
+# Establecer Puppeteer para usar Chromium dentro del contenedor
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Exponer el puerto del backend
+EXPOSE 3000
+
+# Comando para ejecutar la aplicación
+CMD ["npm", "run", "dev"]
+
