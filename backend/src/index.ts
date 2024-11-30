@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { initializeDatabase, sequelize } from "./config/database";
 import cors from 'cors';
 import router from "./routes/router";
+import errorHandler from "./middleware/errorHandler";
 import session from "express-session";
 
 declare module "express-session" {
@@ -44,6 +45,7 @@ app.use((req, res) => {
   res.status(404).json({ error: "Ruta no encontrada" });
 });
 
+app.use(errorHandler);
 
 async function startServer() {
   await initializeDatabase(sequelize);
