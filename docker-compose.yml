@@ -1,90 +1,44 @@
-version: "3.8"
 services:
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173" # Puerto estándar de Vite
+      - "5173:5173" 
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://localhost:3000 # URL del backend
+      - VITE_API_URL=http://localhost:3000 
     volumes:
       - ./frontend:/app
-      - /app/node_modules # Para evitar conflictos de módulos locales
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    volumes:
+      - ./backend/src:/app/src
     ports:
-      - "3000:3000" # Puerto del backend
+      - "3000:3000"
     depends_on:
       - database
     environment:
-      - DATABASE_URL=postgresql://user:password@database:5432/mydb
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - NODE_ENV=development
+    command: npm run dev
+
 
   database:
-    image: postgres:15
-    container_name: postgres
+    image: mysql:8
+    container_name: mysql
     ports:
-      - "5432:5432"
+      - "3306:3306" 
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: user                  
+      MYSQL_PASSWORD: password          
+      MYSQL_DATABASE: mydb              
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d # Scripts SQL de inicialización
+      - mysql_data:/var/lib/mysql       
 
 volumes:
-  postgres_data:
-version: "3.8"
-services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173" # Puerto estándar de Vite
-    depends_on:
-      - backend
-    environment:
-      - VITE_API_URL=http://localhost:3000 # URL del backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules # Para evitar conflictos de módulos locales
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000" # Puerto del backend
-    depends_on:
-      - database
-    environment:
-      - DATABASE_URL=postgresql://user:password@database:5432/mydb
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-
-  database:
-    image: postgres:15
-    container_name: postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d # Scripts SQL de inicialización
-
-volumes:
-  postgres_data:
+  mysql_data:
