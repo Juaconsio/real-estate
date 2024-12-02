@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import { initializeDatabase, sequelize } from "./config/database";
 import cors from 'cors';
@@ -17,24 +17,31 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+const loggerMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  console.log(`Request received: ${req.method} ${req.url}`);
+  console.log('Body:', req.body); // Muestra el body
+  next(); // Continúa con el siguiente middleware o manejador
+};
+
 
 app.use(express.json());
-
+app.use(loggerMiddleware);
 app.use(cors({
-  // origin: ['http://localhost:5173', 'http://frontend:5173']
-  origin: '*',
+  origin: ['http://localhost:5173', 'http://frontend:5173'],
+  credentials: true,
+  // origin: '*',
 }));
 
 app.use(
   session({
-    secret: 'real-estate-secret',
-    saveUninitialized: false,
+    secret: "real-estate", // Cambia a un secreto seguro
     resave: false,
+    saveUninitialized: false,
     cookie: {
-      maxAge: 60 * 60 * 1000,
-      sameSite: true,
-      secure: false
-    }
+      httpOnly: true, // Protege contra acceso vía JavaScript
+      secure: false, // En desarrollo, `false` para HTTP; `true` en producción (HTTPS)
+      sameSite: "lax", // Permite cookies con credenciales en el mismo sitio y subdominios
+    },
   })
 );
 
