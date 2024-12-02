@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Stack, Grid, } from '@mantine/core';
+import { Stack, Grid } from '@mantine/core';
 import { getLandingPage } from '../api/property';
 import CardProperty from '../components/CardProperty';
+import CardPropertySkeleton from '../components/CardPropertySkeleton';
 import SearchBar from '../components/SearchBar';
 import { useArrayContext } from '../context/data';
+import Property from '../types/property';
 
 export default function Landing() {
   const { arrayData, setArrayData } = useArrayContext();
@@ -27,17 +29,30 @@ export default function Landing() {
   return (
     <Stack w={'90vw'} h={'90vh'}>
       <SearchBar />
-      {loading && <div>Cargando...</div>}
       {!loading && arrayData.length === 0 && <div>No hay propiedades</div>}
-      {!loading && arrayData.length > 0 &&
-        <Grid gutter={{ base: 5, xs: 'md', md: 'xl', xl: 50 }}>
-          {arrayData.map((property) => (
-            <Grid.Col span={{ base: 12, md: 6, lg: 3 }} key={property.title}>
-              <CardProperty property={property} />
-            </Grid.Col>
-          ))}
-        </Grid>
-      }
-    </Stack>
+
+      <Grid gutter={{ base: 5, xs: 'md', md: 'xl', xl: 50 }}>
+        {PropertyList({ properties: arrayData, isLoading: loading })}
+      </Grid>
+
+    </Stack >
+  );
+}
+
+function PropertyList({ properties, isLoading }: { properties: Property[]; isLoading: boolean }) {
+  return (
+    <>
+      {isLoading
+        ? Array.from({ length: 5 }).map((_, index) => (
+          <Grid.Col span={{ base: 12, md: 6, lg: 3 }} key={index}>
+            <CardPropertySkeleton />
+          </Grid.Col>
+        ))
+        : properties.map((property, index) => (
+          <Grid.Col span={{ base: 12, md: 6, lg: 3 }} key={property.title}>
+            <CardProperty key={index} property={property} />
+          </Grid.Col>
+        ))}
+    </>
   );
 }
