@@ -1,8 +1,18 @@
 import { Card, Image, Text, Stack, Button, Group } from '@mantine/core';
 import Property from '../types/property';
 import { addFavoriteProperty } from '../api/property';
+import handleResponse from './notifications';
 
 export default function CardProperty({ property }: { property: Property }) {
+  const handleAddFavorite = async (property_url: string) => {
+    try {
+      const res = await addFavoriteProperty(property_url);
+      handleResponse(res, 'Propiedad añadida a favoritos');
+    }
+    catch (error) {
+      console.error(error);
+    }
+  }
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -29,7 +39,7 @@ export default function CardProperty({ property }: { property: Property }) {
           Ver propiedad
         </Button>
         <Button
-          onClick={() => property.url && addFavoriteProperty(property.url)}
+          onClick={() => property.url && handleAddFavorite(property.url)}
           variant="light"
           color='green'
           fullWidth>
