@@ -1,45 +1,53 @@
-import { Request, Response, Router } from 'express';
-import { initUserModel } from '../models/user';
-import { sequelize } from '../config/database';
+import { Request, Response, Router, NextFunction } from 'express';
+import { User } from '../models/index';
 import bcrypt from 'bcrypt';
+import isAuthenticated from '../middleware/auth';
 
 
 const router = Router();
-const User = initUserModel(sequelize);
 
 router.post(
   '/register',
-  // Agraegar validaciones
-  async (req: Request, res: Response): Promise<void> => {
-    const user = await User.create(req.body);
-    res.status(201).json({ user });
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+
+      const user = await User.create(req.body);
+      res.status(201).json({ user });
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
 router.post(
   '/login',
-  // Agraegar validaciones
-  async (req: Request, res: Response): Promise<void> => {
-    const email = req.body.email;
-    const password = req.body.password;
-    const user = await User.findOne({ where: { email }, attributes: ['id', 'password'], });
-    if (!user) {
-      res.status(401).json({ message: 'Invalid email or password' });
-      return;
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+
+      const email = req.body.email;
+      const password = req.body.password;
+      const user = await User.findOne({ where: { email }, attributes: ['id', 'password'], });
+      if (!user) {
+        res.status(401).json({ message: 'Invalid email or password' });
+        return;
+      }
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        res.status(401).json({ message: 'Invalid email or password' });
+        return;
+      }
+      req.session.userId = user.id;
+      res.status(200).json({ message: 'User logged in' });
+    } catch (error) {
+      next(error);
     }
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      res.status(401).json({ message: 'Invalid email or password' });
-      return;
-    }
-    req.session.userId = user.id;
-    res.status(200).json({ message: 'User logged in' });
   }
 );
 
 
 router.post(
   '/logout',
+  isAuthenticated,
   // Agraegar validaciones
   async (req: Request, res: Response): Promise<void> => {
     req.session.destroy(() => {

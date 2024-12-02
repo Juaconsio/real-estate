@@ -14,7 +14,6 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const users = await User.findAll();
-      console.log("session", req.session);
       res.status(200).json(users);
     } catch (error) {
       console.error(error);
