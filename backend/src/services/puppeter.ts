@@ -10,6 +10,43 @@ interface Property {
   bedrooms: string | null;
 }
 
+
+const scrapProperties = async (page: Page) => {
+  return await page.evaluate(() => {
+    const propertyElements = document.querySelectorAll('div[role="group"].andes-carousel-snapped__slide')
+    const propertyDataLoad = Array.from(propertyElements).slice(0, 12);
+
+    const propertyData = propertyDataLoad.map(property => {
+      const link = (property.querySelector('a.ui-item') as HTMLAnchorElement)?.href || '';
+      const image = (property.querySelector('img.ui-item__image') as HTMLImageElement)?.src || '';
+      const price =
+        (property.querySelector('.andes-money-amount__currency-symbol')?.textContent?.trim() || '') + " " +
+        (property.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || '');
+      const buildingType = property.querySelector('.ui-item__top-title')?.textContent?.trim() || '';
+      const address = property.querySelector('.ui-item__middle-title')?.textContent?.trim() || '';
+      const title = property.querySelector('.ui-item__bottom-title')?.textContent?.trim() || '';
+      const meters = Array.from(property.querySelectorAll('p.ui-item__title[itemprop="name"]'))
+        .find(p => p.textContent?.includes('m²'))?.textContent?.trim() || '';
+      const bedrooms = Array.from(property.querySelectorAll('p.ui-item__title[itemprop="name"]'))
+        .find(p => p.textContent?.includes('dormitorios'))?.textContent?.trim() || '';
+
+      return {
+        link,
+        image,
+        buildingType,
+        price,
+        address,
+        title,
+        meters,
+        bedrooms,
+      };
+    });
+
+    return propertyData;
+  });
+}
+
+
 export const getLandingPage = async () => {
   let browser = null;
   try {
@@ -34,27 +71,9 @@ export const getLandingPage = async () => {
       timeout: 30000
     });
     // Extraer información de múltiples propiedades
-    const properties: Property[] = await page.evaluate(() => {
-      const propertyElements = Array.from(document.querySelectorAll('.ui-item__wrapper'));
-      return propertyElements.slice(15).map((property) => {
-        const image = property.querySelector('.ui-item__image-container img')?.getAttribute('src') || null;
-        const url = property.querySelector('a')?.getAttribute('href') || null;
-        const priceContext = property.querySelector('.ui-item__price_context_message')?.textContent?.trim() || '';
-        const priceFraction = property.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || '';
-        const price = priceContext && priceFraction ? `${priceContext} ${priceFraction}` : null;
-        const title = property.querySelector('.ui-item__top-title')?.textContent?.trim() || null;
-        const address = property.querySelector('.ui-item__middle-title')?.textContent?.trim() || null;
-        const size = Array.from(
-          property.querySelectorAll('p[itemprop="name"]')
-        )[0]?.textContent?.trim() || null;
-        const bedrooms = Array.from(
-          property.querySelectorAll('p[itemprop="name"]')
-        )[1]?.textContent?.trim() || null;
+    console.log('Scrapping propiedades');
 
-        return { image, url, price, title, address, size, bedrooms };
-      });
-    });
-
+    const properties = await scrapProperties(page);
     console.log(properties);
     return properties;
   } catch (error) {
@@ -90,15 +109,15 @@ export const getSearchedPage = async (contract: string, type: string, address: s
     Casas: '#\\:R4l5r\\:-menu-list-option-MLC1466_242060',
     Oficinas: '#\\:R4l5r\\:-menu-list-option-MLC1478_242067',
     Parcelas: '#\\:R4l5r\\:-menu-list-option-MLC1496_242070',
-    locales: '#\\:R4l5r\\:-menu-list-option-MLC50610_242065',
-    terrenos: '#\\:R4l5r\\:-menu-list-option-MLC152992_245004',
-    sitios: '#\\:R4l5r\\:-menu-list-option-MLC50613_245008',
-    bodegas: '#\\:R4l5r\\:-menu-list-option-MLC50564_245003',
-    industriales: '#\\:R4l5r\\:-menu-list-option-MLC50617_245009',
-    agricolas: '#\\:R4l5r\\:-menu-list-option-MLC50623_242059',
-    otrosInmuebles: '#\\:R4l5r\\:-menu-list-option-MLC1892_242068',
-    estacionamientos: '#\\:R4l5r\\:-menu-list-option-MLC50620_242064',
-    loteos: '#\\:R4l5r\\:-menu-list-option-MLC1493_245010',
+    Locales: '#\\:R4l5r\\:-menu-list-option-MLC50610_242065',
+    Terrenos: '#\\:R4l5r\\:-menu-list-option-MLC152992_245004',
+    Sitios: '#\\:R4l5r\\:-menu-list-option-MLC50613_245008',
+    Bodegas: '#\\:R4l5r\\:-menu-list-option-MLC50564_245003',
+    Industriales: '#\\:R4l5r\\:-menu-list-option-MLC50617_245009',
+    Agricolas: '#\\:R4l5r\\:-menu-list-option-MLC50623_242059',
+    OtrosInmuebles: '#\\:R4l5r\\:-menu-list-option-MLC1892_242068',
+    Estacionamientos: '#\\:R4l5r\\:-menu-list-option-MLC50620_242064',
+    Loteos: '#\\:R4l5r\\:-menu-list-option-MLC1493_245010',
   };
 
   const optionContractToSelect = optiontSelectorSet(contract);
@@ -212,6 +231,59 @@ export const getSearchedPage = async (contract: string, type: string, address: s
     }
     const gridData = await getGridData(page);
     return gridData;
+  } catch (error) {
+    console.error('Error en el scraping:', error);
+    return [];
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
+export const getFavorites = async (favorites: string[]) => {
+  let browser = null;
+  try {
+    browser = await puppeteer.launch({
+      headless: false,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox'
+      ]
+    });
+
+    const page = await browser.newPage();
+
+    // Configurar user agent
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    // Configurar viewport
+    await page.setViewport({ width: 1280, height: 800 });
+
+    const properties: Property[] = [];
+    for (const url of favorites) {
+      console.log('Extrayendo información de:', url);
+      await page.goto(url, {
+        waitUntil: 'networkidle0',
+        timeout: 30000
+      });
+
+      const property: Property = await page.evaluate(async () => {
+        const image = document.querySelector('.ui-pdp-gallery__figure__image')?.getAttribute('src') || null;
+        const url = window.location.href;
+        const price = document.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || null;
+        const title = document.querySelector('.ui-pdp-title')?.textContent?.trim() || null;
+        const address = document.querySelector('.ui-pdp-seller__address')?.textContent?.trim() || null;
+        const specs = Array.from(document.querySelectorAll('.ui-pdp-highlighted-specs-res__icon-label span.ui-pdp-label'));
+        const data = specs.map(spec => spec.textContent?.trim() || '');
+
+        const size = data[0] || null;
+        const bedrooms = data[1] || null;
+        return { image, url, price, title, address, size, bedrooms };
+      });
+
+      properties.push(property);
+    }
+
+    return properties;
   } catch (error) {
     console.error('Error en el scraping:', error);
     return [];
