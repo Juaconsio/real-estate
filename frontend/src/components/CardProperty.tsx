@@ -1,6 +1,6 @@
-import { Card, Image, Text, Stack, Button } from '@mantine/core';
+import { Card, Image, Text, Stack, Button, Group } from '@mantine/core';
 import Property from '../types/property';
-
+import { addFavoriteProperty } from '../api/property';
 
 export default function CardProperty({ property }: { property: Property }) {
 
@@ -17,20 +17,29 @@ export default function CardProperty({ property }: { property: Property }) {
       <Stack justify="flex-start" align="flex-start" mt="md" mb="xs" gap="xs">
         <Text size="sm">Desde</Text>
         <Text size='xl' fw={600}>{property.price}</Text>
-        <Text size="sm">{property.title}</Text>
-        <Text size="sm">{property.address}</Text>
+        <Text size="lg" fw={500}>{property.title}</Text>
+        <Text fw={500}>{property.address}</Text>
       </Stack>
-      <Button
-        component='a'
-        href={property.url ?? '#'}
-        variant="light"
-        fullWidth>
-        Ver propiedad
-      </Button>
+      <Group justify="space-between" grow>
+        <Button
+          component='a'
+          href={property.url ?? '#'}
+          variant="light"
+          fullWidth>
+          Ver propiedad
+        </Button>
+        <Button
+          onClick={() => property.url && addFavoriteProperty(property.url)}
+          variant="light"
+          color='green'
+          fullWidth>
+          Añadir a Favoritos
+        </Button>
+      </Group>
       <Stack justify="flex-start" align="flex-start" mt="md" mb="xs" gap="xs">
         <Text size="sm">{property.size}</Text>
         <Text size="sm">{property.bedrooms}</Text>
       </Stack>
-    </Card>
+    </Card >
   );
 }

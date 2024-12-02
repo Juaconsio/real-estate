@@ -1,19 +1,23 @@
 
-
 import { getSeachedProperties } from '../api/property';
 import { useForm } from '@mantine/form';
-import { Box, Group, NativeSelect, TextInput, Button } from '@mantine/core';
+import { Box, Group, NativeSelect, TextInput, Button, LoadingOverlay } from '@mantine/core';
 import { useArrayContext } from '../context/data';
-
+import { useDisclosure } from '@mantine/hooks';
 
 export default function SearchBar() {
   const { setArrayData } = useArrayContext();
+  const [visible, { toggle }] = useDisclosure(false);
   const handleSearch = async (values: any) => {
     try {
+      toggle();
       const data = await getSeachedProperties(values);
       setArrayData(data);
     } catch (error) {
       console.error("Error fetching properties:", error);
+
+    } finally {
+      toggle(); // Finaliza el indicador de carga
     }
   }
   const contractOptions = ['Arriendo', 'Venta', 'Arriendo Temporal'];
@@ -50,38 +54,49 @@ export default function SearchBar() {
   });
 
   return (
-    <Box
+
+    < Box pos="relative"
       p="md"
       style={{
-        backgroundColor: 'grey',
         borderRadius: 'lg',
         boxShadow: 'md',
-      }}
+      }
+      }
     >
+      <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
       <form onSubmit={form.onSubmit((values: any) => handleSearch(values))}>
-        <Group gap="md">
-          <NativeSelect
-            label="Tipo de Contrato"
-            data={contractOptions}
-            {...form.getInputProps('contract')}
-          />
-          <NativeSelect
-            label="Tipo de Propiedad"
-            data={typeOptions}
-            {...form.getInputProps('type')}
-          />
-          <TextInput
-            label="Dirección"
-            placeholder="Ej: Calle Falsa 123"
-            {...form.getInputProps('address')}
-          />
+        <Group gap="xl" justify="center" style={{
+          border: '1px solid #e0e0e0', // Borde gris claro
+          borderRadius: '8px', // Bordes redondeados
+          backgroundColor: '#f8f9fa', // Fondo claro diferenciado
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', // Sombra suave
+          padding: '16px', // Espaciado interno
+        }}>
           <Box>
-            <Button type="submit">Buscar</Button>
+            <NativeSelect
+              data={contractOptions}
+              {...form.getInputProps('contract')}
+            />
+          </Box>
+          <Box>
+            <NativeSelect
+              data={typeOptions}
+              {...form.getInputProps('type')}
+            />
+          </Box>
+          <Box style={{ width: '15em' }} >
+            <TextInput
+              placeholder="Ingresa dirección o comuna"
+              {...form.getInputProps('address')}
+            />
+          </Box>
+          <Box >
+            <Button type="submit" >Buscar</Button>
           </Box>
 
         </Group>
       </form>
-    </Box>
+    </Box >
   );
 
 };
