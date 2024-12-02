@@ -206,7 +206,9 @@ export const getSearchedPage = async (contract: string, type: string, address: s
           // Extraer la información de cada propiedad
           const image = item.querySelector('.ui-search-result__image img')?.getAttribute('src') || null;
           const url = item.querySelector('.ui-search-result__image.ui-search-link')?.getAttribute('href') || null;
-          const price = item.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || null; // ACA falata la moneda
+          const price =
+            (document.querySelector('.andes-money-amount__currency-symbol')?.textContent?.trim() || '') + " " +
+            (document.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || '');
           const title = item.querySelector('.ui-search-item__title-label-grid')?.textContent?.trim() || null;
           const address = item.querySelector('.ui-search-item__location-label')?.textContent?.trim() || null;
 
@@ -272,7 +274,9 @@ export const getFavorites = async (favorites: string[]) => {
       const property: Property = await page.evaluate(async () => {
         const image = document.querySelector('.ui-pdp-gallery__figure__image')?.getAttribute('src') || null;
         const url = window.location.href;
-        const price = document.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || null;
+        const price =
+          (document.querySelector('.andes-money-amount__currency-symbol')?.textContent?.trim() || '') + " " +
+          (document.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || '');
         const title = document.querySelector('.ui-pdp-title')?.textContent?.trim() || null;
         const address = document.querySelector('.ui-pdp-seller__address')?.textContent?.trim() || null;
         const specs = Array.from(document.querySelectorAll('.ui-pdp-highlighted-specs-res__icon-label span.ui-pdp-label'));
