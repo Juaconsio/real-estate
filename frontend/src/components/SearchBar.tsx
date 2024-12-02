@@ -17,7 +17,7 @@ export default function SearchBar() {
       console.error("Error fetching properties:", error);
 
     } finally {
-      toggle(); // Finaliza el indicador de carga
+      toggle(); // NO funca
     }
   }
   const contractOptions = ['Arriendo', 'Venta', 'Arriendo Temporal'];
@@ -66,11 +66,11 @@ export default function SearchBar() {
       <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
       <form onSubmit={form.onSubmit((values: any) => handleSearch(values))}>
         <Group gap="xl" justify="center" style={{
-          border: '1px solid #e0e0e0', // Borde gris claro
-          borderRadius: '8px', // Bordes redondeados
-          backgroundColor: '#f8f9fa', // Fondo claro diferenciado
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', // Sombra suave
-          padding: '16px', // Espaciado interno
+          border: '1px solid #e0e0e0',
+          borderRadius: '8px',
+          backgroundColor: '#f8f9fa',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
         }}>
           <Box>
             <NativeSelect
