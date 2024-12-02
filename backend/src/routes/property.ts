@@ -8,7 +8,7 @@ const router = Router();
 router.get(
   '/',
   // Agraegar validaciones
-  // isAuthenticated,
+  isAuthenticated,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const properties = await getLandingPage();
@@ -43,6 +43,25 @@ router.post(
         address as string
       );
       res.status(200).json(properties);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred' });
+    }
+  }
+);
+
+router.get(
+  '/search-history',
+  isAuthenticated,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const searches = await Search.findAll({
+        attributes: ['contract', 'type', 'address', 'createdAt'],
+        where: {
+          userId: req.session.userId
+        }
+      });
+      res.status(200).json(searches);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'An error occurred' });

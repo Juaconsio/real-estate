@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Stack, Grid } from '@mantine/core';
-import { getLandingPage } from '../api/property';
+import { Stack, Grid, Button, Box, Group } from '@mantine/core';
+import { getFavoriteProperties, getLandingPage } from '../api/property';
 import CardProperty from '../components/CardProperty';
 import CardPropertySkeleton from '../components/CardPropertySkeleton';
 import SearchBar from '../components/SearchBar';
 import { useArrayContext } from '../context/data';
 import Property from '../types/property';
+import { useNavigate } from 'react-router-dom';
 
 export default function Landing() {
   const { arrayData, setArrayData } = useArrayContext();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -26,9 +28,26 @@ export default function Landing() {
     fetchProperties();
   }, []);
 
+  const handleFavorite = async () => {
+    try {
+      setLoading(true);
+      const data = await getFavoriteProperties();
+      setArrayData(data);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
   return (
     <Stack w={'90vw'} h={'90vh'}>
       <SearchBar />
+      <Group justify="center" >
+        <Button variant="light" color="cyan" onClick={() => navigate('/historial')}>Historial de busqueda</Button>
+        <Button variant="light" color="green" onClick={() => handleFavorite()}>Favoritos</Button>
+      </Group>
       {!loading && arrayData.length === 0 && <div>No hay propiedades</div>}
 
       <Grid gutter={{ base: 5, xs: 'md', md: 'xl', xl: 50 }}>
