@@ -14,10 +14,11 @@ interface Property {
 const scrapProperties = async (page: Page) => {
   return await page.evaluate(() => {
     const propertyElements = document.querySelectorAll('div[role="group"].andes-carousel-snapped__slide')
-    const propertyDataLoad = Array.from(propertyElements).slice(0, 12);
+    const propertyDataLoad = Array.from(propertyElements);
+    const properties: Property[] = [];
 
-    const propertyData = propertyDataLoad.map(property => {
-      const link = (property.querySelector('a.ui-item') as HTMLAnchorElement)?.href || '';
+    propertyDataLoad.forEach((property) => {
+      const url = (property.querySelector('a.ui-item') as HTMLAnchorElement)?.href || '';
       const image = (property.querySelector('img.ui-item__image') as HTMLImageElement)?.src || '';
       const price =
         (property.querySelector('.andes-money-amount__currency-symbol')?.textContent?.trim() || '') + " " +
@@ -25,24 +26,24 @@ const scrapProperties = async (page: Page) => {
       const buildingType = property.querySelector('.ui-item__top-title')?.textContent?.trim() || '';
       const address = property.querySelector('.ui-item__middle-title')?.textContent?.trim() || '';
       const title = property.querySelector('.ui-item__bottom-title')?.textContent?.trim() || '';
-      const meters = Array.from(property.querySelectorAll('p.ui-item__title[itemprop="name"]'))
+      const size = Array.from(property.querySelectorAll('p.ui-item__title[itemprop="name"]'))
         .find(p => p.textContent?.includes('m²'))?.textContent?.trim() || '';
       const bedrooms = Array.from(property.querySelectorAll('p.ui-item__title[itemprop="name"]'))
         .find(p => p.textContent?.includes('dormitorios'))?.textContent?.trim() || '';
-
-      return {
-        link,
-        image,
-        buildingType,
-        price,
-        address,
-        title,
-        meters,
-        bedrooms,
-      };
+      if (image && url && price && title && address && size && bedrooms) {
+        properties.push({
+          image,
+          url,
+          price,
+          title,
+          address,
+          size,
+          bedrooms,
+        });
+      }
     });
 
-    return propertyData;
+    return properties;
   });
 }
 
@@ -205,7 +206,7 @@ export const getSearchedPage = async (contract: string, type: string, address: s
           // Extraer la información de cada propiedad
           const image = item.querySelector('.ui-search-result__image img')?.getAttribute('src') || null;
           const url = item.querySelector('.ui-search-result__image.ui-search-link')?.getAttribute('href') || null;
-          const price = item.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || null;
+          const price = item.querySelector('.andes-money-amount__fraction')?.textContent?.trim() || null; // ACA falata la moneda
           const title = item.querySelector('.ui-search-item__title-label-grid')?.textContent?.trim() || null;
           const address = item.querySelector('.ui-search-item__location-label')?.textContent?.trim() || null;
 
@@ -215,15 +216,17 @@ export const getSearchedPage = async (contract: string, type: string, address: s
           const bedrooms = attributes[0]?.textContent?.trim() || null; // 1 a 2 dormitorios
 
           // Agregar la propiedad al array
-          properties.push({
-            image,
-            url,
-            price,
-            title,
-            address,
-            size,
-            bedrooms,
-          });
+          if (image && url && price && title && address && size && bedrooms) {
+            properties.push({
+              image,
+              url,
+              price,
+              title,
+              address,
+              size,
+              bedrooms,
+            });
+          }
         });
 
         return properties;

@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import isAuthenticated from '../middleware/auth';
-import { getLandingPage, getSearchedPage, getFavorites } from '../services/puppeter';
+import { getLandingPage, getSearchedPage, getFavorites } from '../services/puppeteer';
 import { Favorite, Search } from '../models/index';
 const router = Router();
 
